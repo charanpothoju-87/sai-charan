@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyAI - Intelligent Learning Platform</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .panel h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+        }
+
+        .document-item {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .document-meta {
+            font-size: 0.9em;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .quiz-container {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 15px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .question {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .question h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .option.correct {
+            border-color: #48bb78;
+            background: rgba(72, 187, 120, 0.1);
+        }
+
+        .option.incorrect {
+            border-color: #f56565;
+            background: rgba(245, 101, 101, 0.1);
+        }
+
+        .progress-bar {
+            background: #e2e8f0;
+            border-radius: 10px;
+            height: 8px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #48bb78;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-text {
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .tab-container {
+            display: flex;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #4a5568;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .content-area {
+            min-height: 400px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: #f56565;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>StudyAI</h1>
+            <p>Intelligent Learning Platform with AI-Powered Analytics</p>
+        </div>
+
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('upload')">Document Processing</button>
+            <button class="tab" onclick="switchTab('quiz')">Assessment Center</button>
+            <button class="tab" onclick="switchTab('analytics')">Progress Analytics</button>
+            <button class="tab" onclick="switchTab('recommendations')">AI Recommendations</button>
+        </div>
+
+        <div id="upload-tab" class="content-area">
+            <div class="dashboard">
+                <div class="panel">
+                    <h2><span class="icon"></span>Upload Documents</h2>
+                    <div class="upload-area" id="uploadArea">
+                        <p style="margin-bottom: 15px; font-size: 1.1em; color: #4a5568;">
+                            📄 Drag & drop your study materials here
+                        </p>
+                        <p style="color: #718096; margin-bottom: 20px;">
+                            Supports PDF, TXT, DOCX files
+                        </p>
+                        <input type="file" id="fileInput" accept=".pdf,.txt,.docx" multiple style="display: none;">
+                        <button class="btn" onclick="document.getElementById('fileInput').click()">
+                            Choose Files
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2><span class="icon"></span>Document Library</h2>
+                    <div id="documentList">
+                        <p style="color: #718096; text-align: center; padding: 20px;">
+                            No documents uploaded yet. Upload your first study material to get started!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quiz-tab" class="content-area hidden">
+            <div class="panel">
+                <h2><span class="icon"></span>Automated Assessment Generation</h2>
+                <div style="margin-bottom: 20px;">
+                    <select id="documentSelect" class="btn" style="margin-right: 10px;">
+                        <option value="">Select a document</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="generateQuiz()">
+                        <span id="generateText">Generate Quiz</span>
+                        <span id="generateLoader" class="loading hidden"></span>
+                    </button>
+                </div>
+                <div id="quizContainer"></div>
+            </div>
+        </div>
+
+        <div id="analytics-tab" class="content-area hidden">
+            <div class="panel">
+                <h2><span class="icon"></span>Learning Progress Analytics</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalQuizzes">0</div>
+                        <div class="stat-label">Quizzes Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="averageScore">0%</div>
+                        <div class="stat-label">Average Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="studyTime">0h</div>
+                        <div class="stat-label">Study Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="documentsProcessed">0</div>
+                        <div class="stat-label">Documents Processed</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="progressChart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="performanceChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="recommendations-tab" class="content-area hidden">
+            <div class="panel">
+                <h2><span class="icon"></span>AI-Driven Study Recommendations</h2>
+                <div id="recommendationsContainer">
+                    <p style="color: #718096; text-align: center; padding: 20px;">
+                        Complete some quizzes to receive personalized AI recommendations!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state management
+        const studyData = {
+            documents: JSON.parse(localStorage.getItem('studyDocuments') || '[]'),
+            quizResults: JSON.parse(localStorage.getItem('quizResults') || '[]'),
+            studyTime: parseInt(localStorage.getItem('studyTime') || '0'),
+            currentQuiz: null,
+            startTime: null
+        };
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.content-area').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            event.target.classList.add('active');
+            
+            // Update tab-specific content
+            if (tabName === 'analytics') {
+                updateAnalytics();
+            } else if (tabName === 'recommendations') {
+                generateRecommendations();
+            } else if (tabName === 'quiz') {
+                updateDocumentSelect();
+            }
+        }
+
+        // File upload functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            // Drag and drop events
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+            
+            // Initialize displays
+            updateDocumentList();
+            updateAnalytics();
+            studyData.startTime = Date.now();
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type === 'text/plain' || file.name.endsWith('.txt') || 
+                    file.name.endsWith('.pdf') || file.name.endsWith('.docx')) {
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const document = {
+                            id: Date.now() + Math.random(),
+                            name: file.name,
+                            type: file.type || 'text/plain',
+                            size: file.size,
+                            uploadDate: new Date().toISOString(),
+                            content: e.target.result
+                        };
+                        
+                        studyData.documents.push(document);
+                        saveData();
+                        updateDocumentList();
+                        updateDocumentSelect();
+                        showToast('Document uploaded successfully!');
+                    };
+                    reader.readAsText(file);
+                } else {
+                    showToast('Unsupported file type. Please upload PDF, TXT, or DOCX files.', 'error');
+                }
+            });
+        }
+
+        function updateDocumentList() {
+            const documentList = document.getElementById('documentList');
+            
+            if (studyData.documents.length === 0) {
+                documentList.innerHTML = `
+                    <p style="color: #718096; text-align: center; padding: 20px;">
+                        No documents uploaded yet. Upload your first study material to get started!
+                    </p>
+                `;
+                return;
+            }
+            
+            documentList.innerHTML = studyData.documents.map(doc => `
+                <div class="document-item">
+                    <div class="document-info">
+                        <div class="document-name">${doc.name}</div>
+                        <div class="document-meta">
+                            ${formatFileSize(doc.size)} • ${formatDate(doc.uploadDate)}
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="deleteDocument('${doc.id}')">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function updateDocumentSelect() {
+            const select = document.getElementById('documentSelect');
+            select.innerHTML = '<option value="">Select a document</option>' +
+                studyData.documents.map(doc => 
+                    `<option value="${doc.id}">${doc.name}</option>`
+                ).join('');
+        }
+
+        function deleteDocument(id) {
+            studyData.documents = studyData.documents.filter(doc => doc.id != id);
+            saveData();
+            updateDocumentList();
+            updateDocumentSelect();
+            showToast('Document deleted successfully!');
+        }
+
+        // Quiz generation and management
+        function generateQuiz() {
+            const selectedDocId = document.getElementById('documentSelect').value;
+            if (!selectedDocId) {
+                showToast('Please select a document first!', 'error');
+                return;
+            }
+            
+            const document = studyData.documents.find(doc => doc.id == selectedDocId);
+            if (!document) {
+                showToast('Document not found!', 'error');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('generateText').classList.add('hidden');
+            document.getElementById('generateLoader').classList.remove('hidden');
+            
+            // Simulate AI quiz generation
+            setTimeout(() => {
+                const quiz = generateQuizFromContent(document.content, document.name);
+                displayQuiz(quiz);
+                
+                // Hide loading state
+                document.getElementById('generateText').classList.remove('hidden');
+                document.getElementById('generateLoader').classList.add('hidden');
+                
+                showToast('Quiz generated successfully!');
+            }, 2000);
+        }
+
+        function generateQuizFromContent(content, documentName) {
+            // Intelligent quiz generation based on content analysis
+            const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
+            const keyPhrases = extractKeyPhrases(content);
+            
+            const questions = [];
+            const numQuestions = Math.min(5, Math.max(3, Math.floor(sentences.length / 10)));
+            
+            for (let i = 0; i < numQuestions; i++) {
+                const questionData = generateQuestionFromContent(sentences, keyPhrases, i);
+                questions.push(questionData);
+            }
+            
+            return {
+                id: Date.now(),
+                title: `Quiz: ${documentName}`,
+                documentId: documentName,
+                questions: questions,
+                createdAt: new Date().toISOString()
+            };
+        }
+
+        function extractKeyPhrases(content) {
+            const words = content.toLowerCase()
+                .replace(/[^\w\s]/g, ' ')
+                .split(/\s+/)
+                .filter(word => word.length > 3);
+            
+            const frequency = {};
+            words.forEach(word => {
+                frequency[word] = (frequency[word] || 0) + 1;
+            });
+            
+            return Object.entries(frequency)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 20)
+                .map(([word]) => word);
+        }
+
+        function generateQuestionFromContent(sentences, keyPhrases, index) {
+            const questionTypes = [
+                'What is the main concept related to',
+                'Which statement best describes',
+                'What is the relationship between',
+                'According to the content, what',
+                'Which of the following is true about'
+            ];
+            
+            const randomSentence = sentences[Math.floor(Math.random() * sentences.length)];
+            const randomKeyPhrase = keyPhrases[Math.floor(Math.random() * Math.min(keyPhrases.length, 10))];
+            const questionType = questionTypes[index % questionTypes.length];
+            
+            const correctAnswer = generateAnswerFromSentence(randomSentence);
+            const incorrectAnswers = generateIncorrectAnswers(correctAnswer, keyPhrases);
+            
+            const options = [correctAnswer, ...incorrectAnswers].sort(() => Math.random() - 0.5);
+            const correctIndex = options.indexOf(correctAnswer);
+            
+            return {
+                id: `q${index + 1}`,
+                question: `${questionType} ${randomKeyPhrase}?`,
+                options: options,
+                correctAnswer: correctIndex,
+                explanation: `This relates to the concept of ${randomKeyPhrase} as discussed in the document.`
+            };
+        }
+
+        function generateAnswerFromSentence(sentence) {
+            const words = sentence.trim().split(/\s+/);
+            if (words.length > 8) {
+                return words.slice(0, 8).join(' ') + '...';
+            }
+            return sentence.trim();
+        }
+
+        function generateIncorrectAnswers(correctAnswer, keyPhrases) {
+            const templates = [
+                `It primarily focuses on ${keyPhrases[0] || 'general concepts'}`,
+                `The main emphasis is on ${keyPhrases[1] || 'theoretical frameworks'}`,
+                `It demonstrates the importance of ${keyPhrases[2] || 'practical applications'}`
+            ];
+            
+            return templates.slice(0, 3).map((template, i) => {
+                const phrase = keyPhrases[i] || `concept ${i + 1}`;
+                return template.replace(/\${.*?}/, phrase);
+            });
+        }
+
+        function displayQuiz(quiz) {
+            studyData.currentQuiz = quiz;
+            const container = document.getElementById('quizContainer');
+            
+            container.innerHTML = `
+                <div class="quiz-container">
+                    <h3>${quiz.title}</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="quizProgress" style="width: 0%"></div>
+                    </div>
+                    <div id="questionsContainer">
+                        ${quiz.questions.map((q, index) => `
+                            <div class="question" data-question="${index}">
+                                <h3>Question ${index + 1}: ${q.question}</h3>
+                                <div class="options">
+                                    ${q.options.map((option, optIndex) => `
+                                        <div class="option" data-question="${index}" data-option="${optIndex}" onclick="selectOption(${index}, ${optIndex})">
+                                            ${option}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="submitQuiz()" id="submitBtn" disabled>
+                            Submit Quiz
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            studyData.currentQuiz.userAnswers = new Array(quiz.questions.length).fill(-1);
+        }
+
+        function selectOption(questionIndex, optionIndex) {
+            // Remove previous selection
+            document.querySelectorAll(`[data-question="${questionIndex}"]`).forEach(opt => {
+                if (opt.classList.contains('option')) {
+                    opt.classList.remove('selected');
+                }
+            });
+            
+            // Add current selection
+            event.target.classList.add('selected');
+            studyData.currentQuiz.userAnswers[questionIndex] = optionIndex;
+            
+            // Update progress
+            const answeredCount = studyData.currentQuiz.userAnswers.filter(a => a !== -1).length;
+            const progress = (answeredCount / studyData.currentQuiz.questions.length) * 100;
+            document.getElementById('quizProgress').style.width = `${progress}%`;
+            
+            // Enable submit button if all questions answered
+            if (answeredCount === studyData.currentQuiz.questions.length) {
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        function submitQuiz() {
+            if (!studyData.currentQuiz) return;
+            
+            const quiz = studyData.currentQuiz;
+            let correctAnswers = 0;
+            
+            // Show results
+            quiz.questions.forEach((question, qIndex) => {
+                const isCorrect = quiz.userAnswers[qIndex] === question.correctAnswer;
+                if (isCorrect) correctAnswers++;
+                
+                // Update UI to show correct/incorrect answers
+                document.querySelectorAll(`[data-question="${qIndex}"]`).forEach(opt => {
+                    if (opt.classList.contains('option')) {
+                        const optIndex = parseInt(opt.dataset.option);
+                        if (optIndex === question.correctAnswer) {
+                            opt.classList.add('correct');
+                        } else if (optIndex === quiz.userAnswers[qIndex] && !isCorrect) {
+                            opt.classList.add('incorrect');
+                        }
+                        opt.style.pointerEvents = 'none';
+                    }
+                });
+            });
+            
+            const score = Math.round((correctAnswers / quiz.questions.length) * 100);
+            
+            // Save result
+            const result = {
+                quizId: quiz.id,
+                documentName: quiz.documentId,
+                score: score,
+                correctAnswers: correctAnswers,
+                totalQuestions: quiz.questions.length,
+                completedAt: new Date().toISOString(),
+                timeSpent: Math.round((Date.now() - studyData.startTime) / 1000 / 60) // minutes
+            };
+            
+            studyData.quizResults.push(result);
+            saveData();
+            
+            // Update study time
+            studyData.studyTime += result.timeSpent;
+            localStorage.setItem('studyTime', studyData.studyTime.toString());
+            
+            // Show result
+            showToast(`Quiz completed! Score: ${score}% (${correctAnswers}/${quiz.questions.length})`);
+            
+            // Disable submit button
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Quiz Completed';
+            
+            // Reset timer
+            studyData.startTime = Date.now();
+        }
+
+        // Analytics and visualization
+        function updateAnalytics() {
+            const stats = calculateStats();
+            
+            document.getElementById('totalQuizzes').textContent = stats.totalQuizzes;
+            document.getElementById('averageScore').textContent = `${stats.averageScore}%`;
+            document.getElementById('studyTime').textContent = `${Math.round(stats.studyTime / 60)}h`;
+            document.getElementById('documentsProcessed').textContent = stats.documentsProcessed;
+            
+            createProgressChart();
+            createPerformanceChart();
+        }
+
+        function calculateStats() {
+            const results = studyData.quizResults;
+            
+            return {
+                totalQuizzes: results.length,
+                averageScore: results.length > 0 ? Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length) : 0,
+                studyTime: studyData.studyTime,
+                documentsProcessed: studyData.documents.length
+            };
+        
